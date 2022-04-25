@@ -1,0 +1,23 @@
+- name: Configure webserver with nginx
+  hosts: all
+  become: True
+  tasks:
+    - name: install nginx
+      apt: name=nginx update_cache=yes
+
+    - name: copy nginx config file
+      copy: src=nginx.conf dest=/etc/nginx/sites-available/default
+
+    - name: enable configuration
+      file: >
+        dest=/etc/nginx/sites-enabled/default
+        src=/etc/nginx/sites-available/default
+        state=link
+
+    - name: Ansible copy directory to the remote server
+      copy:
+        src: ./templates/
+        dest: /usr/share/nginx/html/
+
+    - name: restart nginx
+      service: name=nginx state=restarted

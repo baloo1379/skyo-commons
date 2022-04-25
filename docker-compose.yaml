@@ -1,0 +1,46 @@
+version: '3.3'
+
+services:
+  db:
+    container_name: skyo-db
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+#      POSTGRES_INITDB_ARGS: "--locale en_US.UTF-8 -E UTF8 -D /var/lib/postgres/data"
+
+  adminer:
+    container_name: skyo-adminer
+    image: adminer
+    restart: always
+    ports:
+      - "8080:8080"
+
+  backend:
+    container_name: skyo-backend
+    build:
+      context: ./skyo
+      dockerfile: ./Dockerfile
+    environment:
+      DATABASE_URL: "postgresql+psycopg2://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}"
+      HOST: 0.0.0.0
+      PORT: 8000
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+
+  frontend:
+    container_name: skyo-frontend
+    build:
+      context: ./skyo-frontend
+      args: [ "API_URL=${API_URL}" ]
+      dockerfile: ./Dockerfile
+    environment:
+      API_URL: ${API_URL}
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
